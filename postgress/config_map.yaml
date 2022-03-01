@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debezium
+  labels:
+    app: debezium
+data:
+  application.properties: |-
+      debezium.sink.type=pubsub
+      debezium.source.connector.class=io.debezium.connector.postgresql.PostgresConnector
+      debezium.source.offset.storage.file.filename=data/offsets.dat
+      debezium.source.offset.flush.interval.ms=0
+      debezium.source.database.hostname=localhost
+      debezium.source.database.port=5432
+      debezium.source.database.user=replication_user
+      debezium.source.database.password=secret
+      debezium.source.database.dbname=debezium-test-db
+      debezium.source.database.server.name=debezium-test-db
+      debezium.source.table.include.list=public.debezium-test
+      debezium.source.plugin.name=pgoutput
+      debezium.source.tombstones.on.delete=false

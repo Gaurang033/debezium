@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: debezium-mysql
+  labels:
+    app: debezium-mysql
+spec:
+  replicas: 1
+  serviceName: debezium-mysql
+  selector:
+    matchLabels:
+      app: debezium-mysql
+  template:
+    metadata:
+      labels:
+        app: debezium-mysql
+        version: v1
+    spec:
+      serviceAccountName: debezium-sa
+      securityContext:
+        fsGroup: 185 # Debezium container uses jboss user thats id is 185.
+      containers:
+        - name: debezium-server
+          image: debezium/server:1.7.0.Final
+          volumeMounts:
+            - name: debezium-config-volume
+              mountPath: /debezium/conf
+            - name: debezium-data-volume
+              mountPath: /debezium/data
+        - name: cloud-sql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.27.1
+          command: 
+            - /cloud_sql_proxy
+            - -instances=dataframework:us-east1:dpmysql-public=tcp:3306
+          securityContext:
+            runAsNonRoot: true
+      volumes:
+        - name: debezium-config-volume
+          configMap:
+            name: debezium-mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: debezium-data-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Mi
